@@ -77,7 +77,7 @@ jobs:
           # Dettagli dell'email
           subject: "Report Bimestrale Automatico - Nuovi Corsi Syllabus"
           # Inserisci qui le email separate da una virgola
-          to: tua_email_aziendale@azienda.com,collega1@azienda.com,collega2@azienda.com
+          to: ${{ secrets.EMAIL_RECIPIENTS }}
           from: GitHub Actions Robot <${{ secrets.SMTP_USERNAME }}>
           body: "In allegato trovi i file JSON ed Excel dei nuovi corsi Syllabus rilevati nell'esecuzione programmata."
           

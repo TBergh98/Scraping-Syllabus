@@ -97,7 +97,7 @@ def convert_json_to_excel(json_path, excel_path):
                     col_name = df.columns[col_idx - 1]
                     
                     # Allineamento e formattazioni specifiche in base al tipo di colonna
-                    if col_name in ["Durata", "Livelli di Padronanza"]:
+                    if col_name in ["Durata", "Livelli di Padronanza", "Ambito"]:
                         cell.alignment = Alignment(horizontal='center', vertical='top', wrap_text=True)
                     elif col_name == "Link Dettagli":
                         url = cell.value

@@ -128,6 +128,39 @@ def parse_details_page(html_content, url):
                 
     title = detail_title_el.get_text(strip=True) if detail_title_el else "N/A"
     
+    # 2. Ambito del corso (Tag)
+    ambito_el = soup.find('div', class_=lambda c: c and 'tag' in c.split())
+    if not ambito_el:
+        # Fallback 1: cerca con data-lfr-editable-id contenente '-tag-text'
+        ambito_el = soup.find(attrs={"data-lfr-editable-id": lambda x: x and '-tag-text' in x})
+    if not ambito_el:
+        # Fallback 2: cerca classe bwg
+        ambito_el = soup.find(class_='bwg')
+        
+    ambito = "N/A"
+    if ambito_el:
+        # Sostituiamo gli spazi unificanti (&nbsp;) ed eliminiamo spazi multipli
+        raw_text = ambito_el.get_text(" ", strip=True)
+        raw_text = raw_text.replace('\xa0', ' ')
+        cleaned_text = " ".join(raw_text.split())
+        
+        # Mappatura e normalizzazione
+        lower_text = cleaned_text.lower()
+        if "digitale" in lower_text:
+            ambito = "Transizione digitale"
+        elif "ecologica" in lower_text:
+            ambito = "Transizione ecologica"
+        elif "amministrativa" in lower_text:
+            ambito = "Transizione amministrativa"
+        elif "leadership" in lower_text:
+            ambito = "Leadership e soft skills"
+        elif "principi" in lower_text or "valori" in lower_text:
+            ambito = "Principi e valori della PA"
+        elif "linguistiche" in lower_text:
+            ambito = "Competenze linguistiche"
+        else:
+            ambito = cleaned_text.capitalize()
+    
     # 2. Descrizione Estesa (paragrafi non nell'accordion)
     desc_paragraphs = []
     for p in soup.find_all('p'):
@@ -224,6 +257,7 @@ def parse_details_page(html_content, url):
     
     return {
         "title": title,
+        "ambito": ambito,
         "desc_extended": desc_extended,
         "duration": durations_str,
         "levels": levels_str,
@@ -355,9 +389,10 @@ def main():
             
             # Cortesia / Rate Limit
             if i > 0:
-                actual_delay = random.uniform(args.delay - 0.5, args.delay + 0.5)
-                # print(f"  Attesa di cortesia di {actual_delay:.2f} secondi...")
-                time.sleep(actual_delay)
+                actual_delay = max(0.0, random.uniform(args.delay - 0.5, args.delay + 0.5))
+                if actual_delay > 0:
+                    # print(f"  Attesa di cortesia di {actual_delay:.2f} secondi...")
+                    time.sleep(actual_delay)
                 
             response = fetch_with_retry(url)
             if not response:
@@ -374,6 +409,7 @@ def main():
                 # Aggreghiamo le informazioni
                 full_course_data = {
                     "title": final_title,
+                    "ambito": details.get('ambito', 'N/A'),
                     "desc_short": course['desc_short'],
                     "desc_extended": details['desc_extended'],
                     "detail_url": url,
@@ -384,7 +420,7 @@ def main():
                 }
                 
                 scraped_new_courses.append(full_course_data)
-                print(f"  [OK] Estratto con successo. Livelli: [{details['levels']}] - Durata: [{details['duration']}]")
+                print(f"  [OK] Estratto con successo. Ambito: [{details['ambito']}] - Livelli: [{details['levels']}] - Durata: [{details['duration']}]")
                 
             except Exception as e:
                 print(f"  [ERRORE] Errore imprevisto durante il parsing di '{title_idx}': {e}")
@@ -396,6 +432,7 @@ def main():
             url = course['detail_url']
             history[url] = {
                 "title": course['title'],
+                "ambito": course.get('ambito', 'N/A'),
                 "desc_short": course['desc_short'],
                 "desc_extended": course['desc_extended'],
                 "detail_url": course['detail_url'],
@@ -420,6 +457,7 @@ def main():
             for course in scraped_new_courses:
                 formatted_courses.append({
                     "Titolo": course['title'],
+                    "Ambito": course.get('ambito', 'N/A'),
                     "Descrizione Breve": course['desc_short'],
                     "Descrizione Estesa": course['desc_extended'],
                     "Link Dettagli": course['detail_url'],

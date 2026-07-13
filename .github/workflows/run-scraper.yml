@@ -78,7 +78,7 @@ jobs:
           subject: "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
           # Inserisci qui le email separate da una virgola
           to: ${{ secrets.EMAIL_RECIPIENTS }}
-          from: GitHub Actions Robot <${{ secrets.SMTP_USERNAME }}>
+          from: Syllabus Scraper (IZSVe)
           body: "In allegato trovi i file JSON ed Excel dei nuovi corsi Syllabus rilevati nell'esecuzione programmata."
           
           # Allegati puntati alle cartelle corrette

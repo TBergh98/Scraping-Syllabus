@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -55,7 +55,7 @@ jobs:
       # Carica i file su GitHub come backup (eseguito solo se ci sono nuovi file)
       - name: Upload Artifacts (Backup su GitHub)
         if: steps.check_files.outputs.new_files == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: output-files
           path: |
@@ -65,7 +65,7 @@ jobs:
       # Invia l'email con gli allegati corretti a più destinatari (eseguito solo se ci sono nuovi file)
       - name: Send Email with Outputs
         if: steps.check_files.outputs.new_files == 'true'
-        uses: dawidd6/action-send-mail@v4
+        uses: dawidd6/action-send-mail@v17
         with:
           # Configurazione del server SMTP (Esempio Gmail)
           server_address: smtp.gmail.com
@@ -78,7 +78,7 @@ jobs:
           subject: "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
           # Inserisci qui le email separate da una virgola
           to: ${{ secrets.EMAIL_RECIPIENTS }}
-          from: Syllabus Scraper (IZSVe)
+          from: Syllabus Scraper (IZSVe) <${{ secrets.SMTP_USERNAME }}>
           body: "In allegato trovi i file JSON ed Excel dei nuovi corsi Syllabus rilevati nell'esecuzione programmata."
           
           # Allegati puntati alle cartelle corrette

@@ -2,7 +2,7 @@ name: Run Scripts and Email Outputs
 
 on:
   schedule:
-    - cron: '0 0 1 */2 *' # Esegue ogni 2 mesi (il primo giorno del mese a mezzanotte)
+    - cron: '0 0 1 */3 *' # Esegue ogni 3 mesi (il primo giorno del mese a mezzanotte)
   workflow_dispatch: # Permette l'avvio manuale con un click da GitHub Actions
 
 permissions:
@@ -75,7 +75,7 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           
           # Dettagli dell'email
-          subject: "Report Bimestrale Automatico - Nuovi Corsi Syllabus"
+          subject: "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
           # Inserisci qui le email separate da una virgola
           to: ${{ secrets.EMAIL_RECIPIENTS }}
           from: GitHub Actions Robot <${{ secrets.SMTP_USERNAME }}>

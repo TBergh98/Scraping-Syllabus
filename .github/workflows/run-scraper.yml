@@ -1,0 +1,87 @@
+name: Run Scripts and Email Outputs
+
+on:
+  schedule:
+    - cron: '0 0 1 */2 *' # Esegue ogni 2 mesi (il primo giorno del mese a mezzanotte)
+  workflow_dispatch: # Permette l'avvio manuale con un click da GitHub Actions
+
+permissions:
+  contents: write # IMPORTANTE: Consente a GitHub Actions di salvare lo storico aggiornato nel repository
+
+jobs:
+  run-and-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas openpyxl requests beautifulsoup4
+
+      - name: Run Script
+        run: python scrape_syllabus.py
+
+      # Verifica se sono stati effettivamente generati nuovi file Excel
+      - name: Check if new files were generated
+        id: check_files
+        run: |
+          if [ -d "data/excel" ] && ls data/excel/*.xlsx 1> /dev/null 2>&1; then
+            echo "new_files=true" >> $GITHUB_OUTPUT
+            echo "Rilevati nuovi corsi e file generati correttamente."
+          else
+            echo "new_files=false" >> $GITHUB_OUTPUT
+            echo "Nessun nuovo corso rilevato."
+          fi
+        shell: bash
+
+      # Salva il database storico aggiornato nel repository se ci sono stati nuovi inserimenti
+      - name: Commit and push updated history
+        if: steps.check_files.outputs.new_files == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/corsi_storico.json
+          git commit -m "Auto-update: aggiornato storico corsi Syllabus [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Carica i file su GitHub come backup (eseguito solo se ci sono nuovi file)
+      - name: Upload Artifacts (Backup su GitHub)
+        if: steps.check_files.outputs.new_files == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-files
+          path: |
+            data/json/*.json
+            data/excel/*.xlsx
+
+      # Invia l'email con gli allegati corretti a più destinatari (eseguito solo se ci sono nuovi file)
+      - name: Send Email with Outputs
+        if: steps.check_files.outputs.new_files == 'true'
+        uses: dawidd6/action-send-mail@v4
+        with:
+          # Configurazione del server SMTP (Esempio Gmail)
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          
+          # Dettagli dell'email
+          subject: "Report Bimestrale Automatico - Nuovi Corsi Syllabus"
+          # Inserisci qui le email separate da una virgola
+          to: tua_email_aziendale@azienda.com,collega1@azienda.com,collega2@azienda.com
+          from: GitHub Actions Robot <${{ secrets.SMTP_USERNAME }}>
+          body: "In allegato trovi i file JSON ed Excel dei nuovi corsi Syllabus rilevati nell'esecuzione programmata."
+          
+          # Allegati puntati alle cartelle corrette
+          attachments: |
+            data/json/*.json
+            data/excel/*.xlsx

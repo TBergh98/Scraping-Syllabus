@@ -24,64 +24,43 @@ jobs:
         run: |
           pip install pandas openpyxl requests beautifulsoup4
 
-      - name: Run Script
+      - name: Run Scraper
         run: python scrape_syllabus.py
 
-      # Verifica se sono stati effettivamente generati nuovi file Excel
-      - name: Check if new files were generated
-        id: check_files
-        run: |
-          if [ -d "data/excel" ] && ls data/excel/*.xlsx 1> /dev/null 2>&1; then
-            echo "new_files=true" >> $GITHUB_OUTPUT
-            echo "Rilevati nuovi corsi e file generati correttamente."
-          else
-            echo "new_files=false" >> $GITHUB_OUTPUT
-            echo "Nessun nuovo corso rilevato."
-          fi
-        shell: bash
+      # Invia le email differenziate (onboarding nuovi iscritti con catalogo completo vs vecchi iscritti)
+      - name: Send Notifications (New Courses & Onboarding)
+        id: send_notifications
+        run: python send_notifications.py
+        env:
+          SMTP_SERVER: smtp.gmail.com
+          SMTP_PORT: 465
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+          EMAIL_BODY: ${{ secrets.EMAIL_BODY }}
 
-      # Salva il database storico aggiornato nel repository se ci sono stati nuovi inserimenti
+      # Salva il database storico e il registro destinatari aggiornati nel repository se ci sono modifiche
       - name: Commit and push updated history
-        if: steps.check_files.outputs.new_files == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add data/corsi_storico.json
-          git commit -m "Auto-update: aggiornato storico corsi Syllabus [skip ci]"
-          git push
+          git add data/corsi_storico.json data/recipients_history.json
+          if ! git diff --staged --quiet; then
+            git commit -m "Auto-update: aggiornato storico corsi e registro destinatari [skip ci]"
+            git push
+          else
+            echo "Nessuna modifica da salvare nel repository."
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Carica i file su GitHub come backup (eseguito solo se ci sono nuovi file)
+      # Carica i file su GitHub come backup (eseguito solo se sono state inviate email)
       - name: Upload Artifacts (Backup su GitHub)
-        if: steps.check_files.outputs.new_files == 'true'
+        if: steps.send_notifications.outputs.emails_sent == 'true'
         uses: actions/upload-artifact@v6
         with:
           name: output-files
+          if-no-files-found: ignore
           path: |
-            data/json/*.json
-            data/excel/*.xlsx
-
-      # Invia l'email con gli allegati corretti a più destinatari (eseguito solo se ci sono nuovi file)
-      - name: Send Email with Outputs
-        if: steps.check_files.outputs.new_files == 'true'
-        uses: dawidd6/action-send-mail@v17
-        with:
-          # Configurazione del server SMTP (Esempio Gmail)
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          
-          # Dettagli dell'email
-          subject: "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
-          # Inserisci qui le email separate da una virgola
-          to: ${{ secrets.EMAIL_RECIPIENTS }}
-          from: formazione_40ore_Syllabus_IZSVe <${{ secrets.SMTP_USERNAME }}>
-          body: ${{ secrets.EMAIL_BODY }}
-          
-          # Allegati puntati alle cartelle corrette
-          attachments: |
             data/json/*.json
             data/excel/*.xlsx

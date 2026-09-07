@@ -20,12 +20,13 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
-def convert_json_to_excel(json_path, excel_path):
+def convert_json_to_excel(json_path, excel_path, sheet_name='Nuovi Corsi'):
     """
     Converte un file JSON dei corsi in un file Excel con formattazione premium.
     
     :param json_path: Percorso del file JSON di input.
     :param excel_path: Percorso del file Excel di output (.xlsx).
+    :param sheet_name: Nome del foglio di lavoro Excel (default: 'Nuovi Corsi').
     :return: True se la conversione ha successo, False altrimenti.
     """
     try:
@@ -58,9 +59,9 @@ def convert_json_to_excel(json_path, excel_path):
 
         # Scrittura del file Excel con pandas e openpyxl
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Nuovi Corsi')
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
             workbook = writer.book
-            worksheet = writer.sheets['Nuovi Corsi']
+            worksheet = writer.sheets[sheet_name]
 
             # Stili
             font_family = 'Segoe UI'
@@ -142,11 +143,73 @@ def convert_json_to_excel(json_path, excel_path):
         print(f"  [ERRORE] Si è verificato un errore durante la conversione in Excel: {e}")
         return False
 
+def generate_full_catalog_excel(history_path=None, output_excel_path=None):
+    """
+    Legge lo storico dei corsi (corsi_storico.json) e genera un file Excel con l'intero catalogo.
+    
+    :param history_path: Percorso del file JSON con lo storico (default: data/corsi_storico.json)
+    :param output_excel_path: Percorso del file Excel di output (default: data/excel/catalogo_completo_syllabus.xlsx)
+    :return: Percorso del file Excel generato se riuscito, None altrimenti.
+    """
+    if history_path is None:
+        history_path = os.path.join("data", "corsi_storico.json")
+    if output_excel_path is None:
+        output_excel_path = os.path.join("data", "excel", "catalogo_completo_syllabus.xlsx")
+
+    if not os.path.exists(history_path):
+        print(f"[ERRORE] Il file storico '{history_path}' non esiste.")
+        return None
+
+    try:
+        with open(history_path, "r", encoding="utf-8") as f:
+            history_data = json.load(f)
+
+        if not history_data:
+            print(f"[AVVISO] Lo storico '{history_path}' è vuoto.")
+            return None
+
+        formatted_courses = []
+        for url, course in history_data.items():
+            formatted_courses.append({
+                "Titolo": course.get('title', 'N/A'),
+                "Ambito": course.get('ambito', 'N/A'),
+                "Descrizione Breve": course.get('desc_short', 'N/A'),
+                "Descrizione Estesa": course.get('desc_extended', 'N/A'),
+                "Link Dettagli": course.get('detail_url', url),
+                "Durata": course.get('duration', 'N/A'),
+                "Livelli di Padronanza": course.get('levels', 'N/A'),
+                "Dettaglio Percorso (Syllabus)": course.get('syllabus_text', 'N/A')
+            })
+
+        os.makedirs(os.path.dirname(output_excel_path), exist_ok=True)
+        temp_json = output_excel_path + ".temp.json"
+        with open(temp_json, "w", encoding="utf-8") as f:
+            json.dump(formatted_courses, f, ensure_ascii=False, indent=2)
+
+        success = convert_json_to_excel(temp_json, output_excel_path, sheet_name="Catalogo Completo")
+        if os.path.exists(temp_json):
+            os.remove(temp_json)
+
+        if success:
+            return output_excel_path
+        return None
+    except Exception as e:
+        print(f"[ERRORE] Errore durante la generazione del catalogo completo in Excel: {e}")
+        return None
+
 
 def main():
     parser = argparse.ArgumentParser(description="Convertitore JSON -> Excel per nuovi corsi Syllabus.")
     parser.add_argument("json_file", nargs="?", help="Percorso del file JSON da convertire. Se omesso, esegue la conversione di tutti i file JSON mancanti nella cartella data/json/.")
+    parser.add_argument("--full-catalog", action="store_true", help="Genera l'Excel del catalogo completo da data/corsi_storico.json")
     args = parser.parse_args()
+
+    if args.full_catalog:
+        print("[CONVERSIONE] Generazione del catalogo completo in corso...")
+        out = generate_full_catalog_excel()
+        if out:
+            print(f"[OK] Catalogo completo generato con successo: {out}")
+        return
 
     if args.json_file:
         # Conversione di un singolo file specifico

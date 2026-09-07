@@ -78,7 +78,7 @@ jobs:
           subject: "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
           # Inserisci qui le email separate da una virgola
           to: ${{ secrets.EMAIL_RECIPIENTS }}
-          from: Syllabus Scraper (IZSVe) <${{ secrets.SMTP_USERNAME }}>
+          from: formazione_40ore_Syllabus_IZSVe <${{ secrets.SMTP_USERNAME }}>
           body: ${{ secrets.EMAIL_BODY }}
           
           # Allegati puntati alle cartelle corrette

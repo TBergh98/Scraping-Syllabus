@@ -80,6 +80,7 @@ jobs:
           to: ${{ secrets.EMAIL_RECIPIENTS }}
           from: Syllabus Scraper (IZSVe) <${{ secrets.SMTP_USERNAME }}>
           body: "In allegato trovi i file JSON ed Excel dei nuovi corsi Syllabus rilevati nell'esecuzione programmata."
+          body: ${{ secrets.EMAIL_BODY }}
           
           # Allegati puntati alle cartelle corrette
           attachments: |

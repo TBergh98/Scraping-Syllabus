@@ -173,7 +173,7 @@ def main():
     smtp_port = os.environ.get("SMTP_PORT", "465")
     smtp_username = os.environ.get("SMTP_USERNAME", "")
     smtp_password = os.environ.get("SMTP_PASSWORD", "")
-    sender_name = os.environ.get("SENDER_NAME", "formazione_40ore_Syllabus_IZSVe")
+    sender_name = os.environ.get("SENDER_NAME", "Syllabus Scraper - Formazione IZSVe")
     raw_recipients = os.environ.get("EMAIL_RECIPIENTS", "")
     custom_body = os.environ.get("EMAIL_BODY", "")
 

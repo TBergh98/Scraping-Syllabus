@@ -246,10 +246,10 @@ def main():
             new_user_attachments.extend(latest_new_files)
 
         if has_new_courses:
-            subj = "Benvenuto - Catalogo Completo e Nuovi Corsi Syllabus"
+            subj = "Catalogo Completo e Nuovi Corsi Syllabus"
             body = (
                 "Gentile collega,\n\n"
-                "Benvenuto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
+                "Ti informiamo che sei stato/a iscritto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
                 "In allegato a questa email troverai:\n"
                 "1. Il Catalogo Completo di tutti i percorsi formativi disponibili finora ('catalogo_completo_syllabus.xlsx');\n"
                 "2. Il report con i Nuovi Corsi pubblicati nell'ultimo periodo.\n\n"
@@ -258,10 +258,10 @@ def main():
                 "Staff Formazione Continua"
             )
         else:
-            subj = "Benvenuto - Catalogo Completo Corsi Syllabus"
+            subj = "Catalogo Completo Corsi Syllabus"
             body = (
                 "Gentile collega,\n\n"
-                "Benvenuto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
+                "Ti informiamo che sei stato/a iscritto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
                 "In allegato a questa email troverai il Catalogo Completo con tutti i corsi attualmente disponibili ('catalogo_completo_syllabus.xlsx').\n\n"
                 "Nel periodo corrente non sono stati pubblicati ulteriori corsi; riceverai una nuova notifica alla prossima occasione in cui verranno rilevate novità formative.\n\n"
                 "Cordiali saluti,\n"

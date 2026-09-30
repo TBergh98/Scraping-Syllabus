@@ -175,7 +175,12 @@ def main():
     smtp_password = os.environ.get("SMTP_PASSWORD", "")
     sender_name = os.environ.get("SENDER_NAME", "Syllabus Scraper - Formazione IZSVe")
     raw_recipients = os.environ.get("EMAIL_RECIPIENTS", "")
-    custom_body = os.environ.get("EMAIL_BODY", "")
+    mail_body = (
+        "Buongiorno, in allegato l’elenco aggiornato dei corsi disponibili sulla piattaforma syllabus per la condivisione con i vostri colleghi.\n"
+        "Si ricorda ai referenti per la formazione di raccogliere le eventuali adesioni e inviarle a formazione @izsvenezie.it previa autorizzazione del proprio DSC\n"
+        "Cordiali saluti\n\n"
+        "Ufficio formazione IZSVe - 4180"
+    )
 
     if not args.dry_run and (not smtp_username or not smtp_password):
         print("[ERRORE] Credenziali SMTP non configurate nelle variabili d'ambiente (SMTP_USERNAME, SMTP_PASSWORD).")
@@ -247,26 +252,10 @@ def main():
 
         if has_new_courses:
             subj = "Catalogo Completo e Nuovi Corsi Syllabus"
-            body = (
-                "Gentile collega,\n\n"
-                "Ti informiamo che sei stato/a iscritto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
-                "In allegato a questa email troverai:\n"
-                "1. Il Catalogo Completo di tutti i percorsi formativi disponibili finora ('catalogo_completo_syllabus.xlsx');\n"
-                "2. Il report con i Nuovi Corsi pubblicati nell'ultimo periodo.\n\n"
-                "A partire dalla prossima schedulazione periodica, riceverai unicamente gli aggiornamenti con le nuove uscite.\n\n"
-                "Cordiali saluti,\n"
-                "Staff Formazione Continua"
-            )
+            body = mail_body
         else:
             subj = "Catalogo Completo Corsi Syllabus"
-            body = (
-                "Gentile collega,\n\n"
-                "Ti informiamo che sei stato/a iscritto/a al servizio di aggiornamento automatico per i corsi della piattaforma Syllabus (www.syllabus.gov.it).\n\n"
-                "In allegato a questa email troverai il Catalogo Completo con tutti i corsi attualmente disponibili ('catalogo_completo_syllabus.xlsx').\n\n"
-                "Nel periodo corrente non sono stati pubblicati ulteriori corsi; riceverai una nuova notifica alla prossima occasione in cui verranno rilevate novità formative.\n\n"
-                "Cordiali saluti,\n"
-                "Staff Formazione Continua"
-            )
+            body = mail_body
 
         for email in new_recipients:
             emails_to_send.append({
@@ -280,14 +269,7 @@ def main():
     # Preparazione email per VECCHI destinatari (solo se ci sono nuovi corsi)
     if has_new_courses and old_recipients:
         subj = "Report Trimestrale Automatico - Nuovi Corsi Syllabus"
-        default_old_body = (
-            "Gentile collega,\n\n"
-            "Ti informiamo che durante il controllo periodico della piattaforma Syllabus sono stati rilevati nuovi corsi.\n\n"
-            "In allegato trovi il report dettagliato con titoli, durata, livelli di padronanza e programma dei corsi appena pubblicati.\n\n"
-            "Cordiali saluti,\n"
-            "Staff Formazione Continua"
-        )
-        body = custom_body if custom_body else default_old_body
+        body = mail_body
 
         for email in old_recipients:
             emails_to_send.append({
